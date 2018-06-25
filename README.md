@@ -358,16 +358,20 @@ Not bad!
 
 #### 1. Choose five German traffic signs found on the web and provide them in the report. For each image, discuss what quality or qualities might be difficult to classify.
 
-To give myself more insight into how my model is working, I downloaded 10 random German traffic signs from the internet to test. The images must go trhough the same preprocessing steps as my other data. Here they are in preprocessed format.
+##### Load and Output the Images
 
-### Load and Output the Images
+To give myself more insight into how my model is working, I downloaded 10 random German traffic signs from the internet to test. The images must go through the same preprocessing steps as my other data. 
+
+The best images should be centered on the traffic sign, have a 1:1 aspect ratio, and have little else in the frame. I intentionally threw some tough images in there just to see how my model would react. As we will see, my model had the highest levels of uncertainty on these tough/tricky images.
+
+Here are my images in preprocessed format. 
 
 ![png](output_75_1.png)
 
 
 #### 2. Discuss the model's predictions on these new traffic signs and compare the results to predicting on the test set. At a minimum, discuss what the predictions were, the accuracy on these new predictions, and compare the accuracy to the accuracy on the test set (OPTIONAL: Discuss the results in more detail as described in the "Stand Out Suggestions" part of the rubric).
 
-### Predict the Sign Type for Each Image
+##### Predict the Sign Type for Each Image
 
 These are the results I got when I applied my trained model to perform inference on these images.
 
@@ -421,7 +425,7 @@ These are the results I got when I applied my trained model to perform inference
     Actual:  Speed limit (60km/h) Class # 3 )
     
     
-### Analyze Performance
+##### Analyze Performance
 
 ```
 ### Calculate the accuracy for these 5 new images. 
@@ -434,16 +438,25 @@ with tf.Session() as sess:
 
     Test Accuracy = 0.900
 
+On the section above where I ran inference on each image one by one, the accuracy was 70%. Here, I got a test accuracy of 90%. This seems to indicate that the model had significant uncertainty on some of the images such that they classification coould vary from run to run. See section below on softmax probabilities for more on this point.
+
+The test set I used when originally training the model got ~94% accuracy. I believe that the reason is because the quality of the data was much better. 
+
+This situation could be remedied by selecting better test images from the internet.
+
 #### 3. Describe how certain the model is when predicting on each of the five new images by looking at the softmax probabilities for each prediction. Provide the top 5 softmax probabilities for each image along with the sign type of each probability. (OPTIONAL: as described in the "Stand Out Suggestions" part of the rubric, visualizations can also be provided such as bar charts)
 
 ### Output Top 5 Softmax Probabilities For Each Image Found on the Web
 
-For each of the new images, print out the model's softmax probabilities to show the **certainty** of the model's predictions (limit the output to the top 5 probabilities for each image). [`tf.nn.top_k`](https://www.tensorflow.org/versions/r0.12/api_docs/python/nn.html#top_k) could prove helpful here. 
-
-The example below demonstrates how tf.nn.top_k can be used to find the top k predictions for each image.
-
-`tf.nn.top_k` will return the values and indices (class ids) of the top k predictions. So if k=3, for each sign, it'll return the 3 largest probabilities (out of a possible 43) and the correspoding class ids.
+I used `tf.nn.top_k` to generate bar graph displaying the level of certainty of the model's predictions for the top five classes in each image.
 
 
 ![png](output_82_1.png)
 
+
+It's hard to make an apples-to-apples comparison of these probabilities with the predictions in the sections above. The reason is because they were generated form two seperate runs which can get different results. It may have been better to perform both in the same step so that the data would correlate better.
+
+But regardless, some observations can be made from this data.
+
+1. The images with the classes that had extremely high certainty and very little uncertainty were classified correctly in the section above. The ones with very levels of uncertainty appear in the bar graph as if there is only one bar because the other four are so small.
+2. The images with that had significant amounts of uncertainty (i.e. there was more than one bar clearly visible on the bar graph) sometimes had misclassifications. The misclassifications could vary from run to run.
