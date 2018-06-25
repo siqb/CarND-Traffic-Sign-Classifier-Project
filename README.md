@@ -1,15 +1,12 @@
 
 # Self-Driving Car Engineer Nanodegree
 
-## Deep Learning
-
-## Project: Build a Traffic Sign Recognition Classifier
+## Deep Learning Project: Build a Traffic Sign Recognition Classifier
 
 ---
+### Data Set Summary & Exploration
 
-## Dataset Summary & Exploration
-
-### Basic Summary of the Data Set
+#### 1. Provide a basic summary of the data set. In the code, the analysis should be done using python, numpy and/or pandas methods rather than hardcoding results manually.
 
 I used basic Python and NumPy syntax to create a summary of the dataset. None of these values are hardcoded.
 
@@ -41,7 +38,7 @@ The one that needs a bit of explanation is the "Image data shape." The result, (
 
 Classes is the number of unique traffic signs our model is expected to be able to identify. All I had to do was to count unique occurances of each training label.
 
-### Include an exploratory visualization of the dataset
+#### 2. Include an exploratory visualization of the dataset.
 
 Let's first get an idea of what kind of data we're working with. Let's plot some signs out at random just to see how they look.
 
@@ -123,7 +120,7 @@ As can be clearly seen above, Udacity made sure that the training, validation, a
 
 The first step is to preprocess the data. Preprocessing is key. Machine learning algorithm follow the garbage in garbage out principle. Your algorithm depends heavily on the type of training data you use.
 
-### Pre-process the Data Set (normalization, grayscale, etc.)
+##### Pre-process the Data Set (normalization, grayscale, etc.)
 
 Gray scaling is important because it allows us to reduce our input size and thus our model complexity and training time and memory requirements. We are able to get away with gray scaling in the case of traffic sign classification because color is not a relevant feature for traffic signs. The size, shape, text, and so on are what tell us a stop sign is a stop sign. It is true that stop signs are **always** red and therefor it may seem that color is important to keep. But they are **never** blue green, yellow, and thus we don't _need_ to keep the color channels to properly classify road signs.
 
@@ -162,34 +159,6 @@ def perform_gray_normal(X,y):
     return return_X, return_y
 ```
 
-First, let's take the default dataset provided by Udacity and create a grayscaled and normalized version
-
-
-```
-# Grayscale and normalize training data
-X_train, y_train = perform_gray_normal(X_train, y_train)
-print("Shape of X_train (10%):", X_train.shape)
-print("Shape of y_train (10%):", y_train.shape)
-
-# Grayscale and normalize validation data
-X_valid, y_valid = perform_gray_normal(X_valid, y_valid)
-print("Shape of X_valid (10%):", X_valid.shape)
-print("Shape of y_valid (10%):", y_valid.shape)
-
-# Grayscale and normalize test data
-X_test, y_test = perform_gray_normal(X_test, y_test)
-print("Shape of X_test (10%):", X_test.shape)
-print("Shape of y_test (10%):", y_test.shape)
-```
-
-    Shape of X_train (10%): (34799, 32, 32, 1)
-    Shape of y_train (10%): (34799,)
-    Shape of X_valid (10%): (4410, 32, 32, 1)
-    Shape of y_valid (10%): (4410,)
-    Shape of X_test (10%): (12630, 32, 32, 1)
-    Shape of y_test (10%): (12630,)
-
-
 Now let's take the Udacity dataset and use it as a baseline to create an augmented dataset. Data augmentation is a technique which allows us to artifically increase our dataset size by performing transformations on our original training data and adding them to the dataset. The transformations allow us to add diversity in conditions (lighging, positional, etc. into our training data. This makes our network more robust against fluctuations.
 
 I will include some code snippets below to show how I augmented the data.
@@ -217,11 +186,9 @@ Andrej Karpathy said in one of his lectures that as a sanity check you should fe
 
 #### 2. Describe what your final model architecture looks like including model type, layers, layer sizes, connectivity, etc.) Consider including a diagram and/or table describing the final model.
 
-### Details of My Modified LeNet Architecture
-
 I took the default LeNet architecture and made some minor modifications.
 
-Complexity can be increased in 2 ways - increasing the number of layers or number of filters in existing layers. Some things I'm trying here: adding layers, changing numbers of filters, changing filter sizes, add dropout.
+Complexity can be increased in two ways - increasing the number of layers or number of filters in existing layers. Some things I'm trying here: adding layers, changing numbers of filters, changing filter sizes, add dropout.
 
 Regarding tweaking numbers of filters and sizes, this requires experimentation. Usually we use odd sizes like 3x3, 5x5, 7x7. Even numbered and bigger sizes are not usually used.
 
@@ -255,7 +222,7 @@ Here is a table summarizing my architceture.
 | RELU					|												|
 | Dropout				| Keep probaility = 0.5							|
 
-### A Note on Hardware...
+##### A Note on Hardware...
 
 Just a quick note on a very frustrating point.
 
@@ -275,15 +242,6 @@ Going into and out of hibernate/sleep seems to make the GPU disappear. If this d
 
 The process of constructins my model graph was as follows. I mostly reused principles from the default LeNet implementation.
 
-1. Create one-hot encoded labels from training labels
-2. Declared a learning rate of 0.001
-3. Call the output of the architecture "logits"
-4. Calculate the cross entropy of the logits
-5. Declare our loss operation as reducing the mean of the cross entropy
-6. Minimmize this loss using the Adam optimizer
-7. Check if we got the correct prediction by checking if our logits equal the one hot encoded label
-8. Calculate the accuracy by reducing the mean of our predictions
-
 I think it makes sense to reproduce the code here.
 
 ```python
@@ -300,6 +258,13 @@ I think it makes sense to reproduce the code here.
     accuracy_operation_mod = tf.reduce_mean(tf.cast(correct_prediction_mod, tf.float32))
     saver_mod = tf.train.Saver()
 ```
+
+For batch size, I used 256. The idea is to load as many samples into GPU memory as will speed up the training process. Although I don't understand all the details yet, I came across a paper which states that 256 is usually the ideal batch size in most cases:
+https://arxiv.org/pdf/1804.07612.pdf
+
+It is standard convention to start off with a learning rate of 0.001. If the model looks like it doesnt converge, then decrese it. If the model is converging, then increase it to speed up training time.
+
+Regarding epochs, usually the more the better. However, training on my laptop, even with a GPU is painfully slow so I limited it to 30 epochs. It seemed to be fine in most cases although more would have been better.
 
 #### 4. Describe the approach taken for finding a solution and getting the validation set accuracy to be at least 0.93. Include in the discussion the results on the training, validation and test sets and where in the code these were calculated. Your approach may have been an iterative process, in which case, outline the steps you took to get to the final solution and why you chose those steps. Perhaps your solution involved an already well known implementation or architecture. In this case, discuss why you think the architecture is suitable for the current problem.
 
