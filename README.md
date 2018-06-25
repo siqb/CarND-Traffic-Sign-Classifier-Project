@@ -117,7 +117,9 @@ As can be clearly seen above, Udacity made sure that the training, validation, a
 
 ----
 
-## Step 2: Design and Test a Model Architecture
+### Design and Test a Model Architecture
+
+#### 1. Describe how you preprocessed the image data. What techniques were chosen and why did you choose these techniques? Consider including images showing the output of each preprocessing technique. Pre-processing refers to techniques such as converting to grayscale, normalization, etc. (OPTIONAL: As described in the "Stand Out Suggestions" part of the rubric, if you generated additional data for training, describe why you decided to generate additional data, how you generated the data, and provide example images of the additional data. Then describe the characteristics of the augmented training set like number of images in the set, number of images for each class, etc.)
 
 The first step is to preprocess the data. Preprocessing is key. Machine learning algorithm follow the garbage in garbage out principle. Your algorithm depends heavily on the type of training data you use.
 
@@ -213,7 +215,49 @@ Another set that I generated was one that was 10% of the size of the original. T
 
 Andrej Karpathy said in one of his lectures that as a sanity check you should feed the network with very few samples from each class labels and in this way your model should over-fit (that is it performs very well in the training phase but not during test/validation phase). If you're not able to get very high accuracy by training with few samples (coming from each class) then that means something is broken (your implementation is not right).
 
-### Hardware Check
+#### 2. Describe what your final model architecture looks like including model type, layers, layer sizes, connectivity, etc.) Consider including a diagram and/or table describing the final model.
+
+### Details of My Modified LeNet Architecture
+
+I took the default LeNet architecture and made some minor modifications.
+
+Complexity can be increased in 2 ways - increasing the number of layers or number of filters in existing layers. Some things I'm trying here: adding layers, changing numbers of filters, changing filter sizes, add dropout.
+
+Regarding tweaking numbers of filters and sizes, this requires experimentation. Usually we use odd sizes like 3x3, 5x5, 7x7. Even numbered and bigger sizes are not usually used.
+
+The idea behind Dropout is to train an ensemble of DNNs and average the results of the whole ensemble instead of train a single DNN. The dropped neurons do not contribute to the training phase in both the forward and backward phases of back-propagation: for this reason **every time a single neuron is dropped out it’s like the training phase is done on a new network.**
+
+https://pgaleone.eu/deep-learning/regularization/2017/01/10/anaysis-of-dropout/
+
+Here is a table summarizing my architceture.
+
+
+| Layer         		|     Description	        					| 
+|:---------------------:|:---------------------------------------------:| 
+| Input         		| 32x32x1 RGB image   							| 
+| Convolution 3x3     	| 1x1 stride, valid padding, outputs 30x30x12 	|
+| RELU					|												|
+| Max pooling	      	| 2x2 stride,  outputs 15x15x12 				|
+| Convolution 3x3     	| 1x1 stride, valid padding, outputs 13x13x32 	|
+| RELU					|												|
+| Max pooling	      	| 2x2 stride,  outputs 6x6x32    				|
+| Convolution 3x3     	| 1x1 stride, valid padding, outputs 4x4x52 	|
+| RELU					|												|
+| Max pooling	      	| 2x2 stride,  outputs 2x2x52    				|
+| Flatten   	      	| Outputs 208                    				|
+| Fully Connected      	| Outputs 120                    				|
+| RELU					|												|
+| Dropout				| Keep probaility = 0.5							|
+| Fully Connected      	| Outputs 84                    				|
+| RELU					|												|
+| Dropout				| Keep probaility = 0.5							|
+| Fully Connected      	| Outputs 43                    				|
+| RELU					|												|
+| Dropout				| Keep probaility = 0.5							|
+
+### A Note on Hardware...
+
+Just a quick note on a very frustrating point.
 
 Before moving forward with the Tensorflow portion of the lab, it's important to do a hardware check to make sure that the GPU is working. I have a laptop with an NVIDIA GeForce GT 740M GPU. Training time can be painfully slow even using this GPU since it is a small one so I absolutley can't afford to train on CPU. Furthermore, the NVIDIA drivers on my system can be very flakey and stop working from time to time so it is essential to make sure that my hardware is working right before attempting to train. Output should log to the terminal.
 
@@ -227,7 +271,37 @@ Successful hardware detection looks like this on my system:
     
 Going into and out of hibernate/sleep seems to make the GPU disappear. If this doesn't show up, restart the laptop and try again. It seems to help. 
 
-### Model Architecture
+#### 3. Describe how you trained your model. The discussion can include the type of optimizer, the batch size, number of epochs and any hyperparameters such as learning rate.
+
+The process of constructins my model graph was as follows. I mostly reused principles from the default LeNet implementation.
+
+1. Create one-hot encoded labels from training labels
+2. Declared a learning rate of 0.001
+3. Call the output of the architecture "logits"
+4. Calculate the cross entropy of the logits
+5. Declare our loss operation as reducing the mean of the cross entropy
+6. Minimmize this loss using the Adam optimizer
+7. Check if we got the correct prediction by checking if our logits equal the one hot encoded label
+8. Calculate the accuracy by reducing the mean of our predictions
+
+I think it makes sense to reproduce the code here.
+
+```python
+    x = tf.placeholder(tf.float32, (None, 32, 32, 1))
+    y = tf.placeholder(tf.int32, (None))
+    one_hot_y_mod = tf.one_hot(y, 43)
+    rate_mod = 0.001
+    logits_mod = LeNet_mod(x)
+    cross_entropy_mod = tf.nn.softmax_cross_entropy_with_logits(labels=one_hot_y_mod, logits=logits_mod)
+    loss_operation_mod = tf.reduce_mean(cross_entropy_mod)
+    optimizer_mod = tf.train.AdamOptimizer(learning_rate = rate_mod)
+    training_operation_mod = optimizer_mod.minimize(loss_operation_mod)
+    correct_prediction_mod = tf.equal(tf.argmax(logits_mod, 1), tf.argmax(one_hot_y_mod, 1))
+    accuracy_operation_mod = tf.reduce_mean(tf.cast(correct_prediction_mod, tf.float32))
+    saver_mod = tf.train.Saver()
+```
+
+#### 4. Describe the approach taken for finding a solution and getting the validation set accuracy to be at least 0.93. Include in the discussion the results on the training, validation and test sets and where in the code these were calculated. Your approach may have been an iterative process, in which case, outline the steps you took to get to the final solution and why you chose those steps. Perhaps your solution involved an already well known implementation or architecture. In this case, discuss why you think the architecture is suitable for the current problem.
 
 My approach to this step was to try three different architectures with three different datasets.
 
@@ -256,8 +330,6 @@ I ran all nine of these permutations to see which performed the best. I will sum
 | Other person's LeNet		| Augmented										|          94%           |
 
 
-
-
 A few observations:
 
 1. This shows the power of data augmentation to get better training results. The best validation accuracy for the default LeNet using the augmented data is almost 93%-94%. This is better than using the default dataset. This is validation accuracy is actually good enough to pass the lab assignment according to the rubric points!
@@ -280,36 +352,6 @@ with tf.Session() as sess:
 
 Not bad!
 
-### Details of My Modified LeNet Architecture
-
-I took the default LeNet architecture and made some minor modifications.
-
-Complexity can be increased in 2 ways - increasing the number of layers or number of filters in existing layers. Some things I'm trying here: adding layers, changing numbers of filters, changing filter sizes, add dropout.
-
-Regarding tweaking numbers of filters and sizes, this requires experimentation. Usually we use odd sizes like 3x3, 5x5, 7x7. Even numbered and bigger sizes are not usually used.
-
-The idea behind Dropout is to train an ensemble of DNNs and average the results of the whole ensemble instead of train a single DNN. The dropped neurons do not contribute to the training phase in both the forward and backward phases of back-propagation: for this reason **every time a single neuron is dropped out it’s like the training phase is done on a new network.**
-
-https://pgaleone.eu/deep-learning/regularization/2017/01/10/anaysis-of-dropout/
-
-Here is a table summarizing my architceture.
-
-
-| Layer         		|     Description	        					| 
-|:---------------------:|:---------------------------------------------:| 
-| Input         		| 32x32x1 RGB image   							| 
-| Convolution 3x3     	| 1x1 stride, same padding, outputs 32x32x64 	|
-| RELU					|												|
-| Max pooling	      	| 2x2 stride,  outputs 16x16x64 				|
-| Convolution 3x3	    | etc.      									|
-| Fully connected		| etc.        									|
-| Softmax				| etc.        									|
-|						|												|
-|						|												|
-
-
-
-
 ---
 
 ### Test a Model on New Images
@@ -321,6 +363,9 @@ To give myself more insight into how my model is working, I downloaded 10 random
 ### Load and Output the Images
 
 ![png](output_75_1.png)
+
+
+#### 2. Discuss the model's predictions on these new traffic signs and compare the results to predicting on the test set. At a minimum, discuss what the predictions were, the accuracy on these new predictions, and compare the accuracy to the accuracy on the test set (OPTIONAL: Discuss the results in more detail as described in the "Stand Out Suggestions" part of the rubric).
 
 ### Predict the Sign Type for Each Image
 
@@ -389,6 +434,7 @@ with tf.Session() as sess:
 
     Test Accuracy = 0.900
 
+#### 3. Describe how certain the model is when predicting on each of the five new images by looking at the softmax probabilities for each prediction. Provide the top 5 softmax probabilities for each image along with the sign type of each probability. (OPTIONAL: as described in the "Stand Out Suggestions" part of the rubric, visualizations can also be provided such as bar charts)
 
 ### Output Top 5 Softmax Probabilities For Each Image Found on the Web
 
