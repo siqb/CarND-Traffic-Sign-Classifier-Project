@@ -1,3 +1,2 @@
 model_checkpoint_path: "lenet_mod_aug-data"
-all_model_checkpoint_paths: "lenet_mod_min-data"
 all_model_checkpoint_paths: "lenet_mod_aug-data"
