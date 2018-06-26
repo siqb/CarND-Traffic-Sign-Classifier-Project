@@ -273,7 +273,7 @@ My approach to this step was to try three different architectures with three dif
 The three architectures were:
 1. Plain LeNet from the lesson material
 2. My own customized LeNet (details to follow)
-3. Someone else's customized LeNet
+3. Someone else's customized LeNet (borrowed from https://github.com/jeremy-shannon/CarND-Traffic-Sign-Classifier-Project)
 
 The three datasets I used to train were:
 1. My small dataset whihc is 10% of the nominal dataset provided by Udacity - this was used to quicky benchmark differences between architectures and parameters
